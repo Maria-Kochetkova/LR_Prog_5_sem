@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currency Observer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #333;
+        }
+        select, button {
+            margin-top: 10px;
+            padding: 10px;
+            font-size: 16px;
+        }
+        #updates {
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            background-color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Currency Observer</h1>
+    <div id="client-id"></div>
+    <div>
+        <label for="currency-select">Выберите валюту для отслеживания:</label>
+        <select id="currency-select">
+            <option value="USD">Доллар США (USD)</option>
+            <option value="EUR">Евро (EUR)</option>
+            <option value="GBP">Фунт стерлингов (GBP)</option>
+            <option value="JPY">Японская иена (JPY)</option>
+            <option value="CNY">Китайский юань (CNY)</option>
+        </select>
+        <button id="get-rate">Выбрать</button>
+    </div>
+    <div id="rates"></div>
+    <div id="selected-rate"></div>
+    <div id="subscription-message"></div>
+    <script>
+        const clientId = Math.random().toString(36).substring(2, 15);
+        document.getElementById('client-id').innerText = "ID клиента: " + clientId;
+
+        const ws = new WebSocket("ws://localhost:8000/ws");
+
+        ws.onopen = function() {
+            console.log("Connected to WebSocket");
+            document.getElementById('subscription-message').innerText = "Соединение установлено.";
+        };
+
+        ws.onmessage = function(event) {
+            const ratesDiv = document.getElementById('rates');
+            const rates = JSON.parse(event.data);
+            ratesDiv.innerText = JSON.stringify(rates, null, 2);
+            populateCurrencySelect(rates);
+        };
+
+        ws.onclose = function() {
+            console.log("Disconnected from WebSocket");
+            document.getElementById('subscription-message').innerText = "Соединение закрыто.";
+        };
+
+        function populateCurrencySelect(rates) {
+            const select = document.getElementById('currency-select');
+            select.innerHTML = ""; // Очистить предыдущие опции
+            for (const [code, currency] of Object.entries(rates)) {
+                const option = document.createElement('option');
+                option.value = code;
+                option.textContent = `${currency.Name} (${code})`;
+                select.appendChild(option);
+            }
+        }
+
+        document.getElementById('get-rate').onclick = async function() {
+            const selectedCurrency = document.getElementById('currency-select').value;
+            const response = await fetch(`/rate/${selectedCurrency}`);
+            const data = await response.json();
+            const selectedRateDiv = document.getElementById('selected-rate');
+            if (data.error) {
+                selectedRateDiv.innerText = data.error;
+            } else {
+                selectedRateDiv.innerText = `Курс: ${data.char_code} = ${data.current} ${data.name}, Предыдущий: ${data.char_code} = ${data.previous} ${data.name}`;
+                document.getElementById('subscription-message').innerText = `Вы подписались на отслеживание ${data.name} (${data.char_code}).`;
+            }
+        };
+    </script>
+</body>
+</html>
