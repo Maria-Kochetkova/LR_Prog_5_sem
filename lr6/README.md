@@ -14,3 +14,7 @@
 в CSV-формате:  
 
 ![](picture/picture3.png)
+
+Написаны тесты:
+
+![](picture/picture4.png)
