@@ -38,7 +38,7 @@ class CurrencyObserver:
             if new_rates != self.last_rates:
                 await self.notify(new_rates)
                 self.last_rates = new_rates
-            await asyncio.sleep(60)  # Проверять каждые 60 секунд
+            await asyncio.sleep(60)
 
 currency_observer = CurrencyObserver()
 
