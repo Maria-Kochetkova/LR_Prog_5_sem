@@ -4,8 +4,18 @@ from main import CurrencyRates
 
 class TestCurrencyRates(unittest.TestCase):
 
+    def setUp(self):
+        """Экземпляр класса CurrencyRates для теста."""
+        self.currency_rates = CurrencyRates()
+
+    def test_singleton(self):
+        """Тест является ли класс CurrencyRates синглтоном."""
+        another_instance = CurrencyRates()
+        self.assertIs(self.currency_rates, another_instance, "CurrencyRates должен быть синглтоном.")
+
     @patch('main.requests.get')
     def test_get_rates_success(self, mock_get):
+        '''Тест на корректный вывод конкретных валют (Юань, Румынский лей) и несуществующей валюты'''
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.content = """<ValCurs Date="01.01.2023" name="Foreign Currency Market">
@@ -38,3 +48,4 @@ class TestCurrencyRates(unittest.TestCase):
         ]
 
         self.assertEqual(rates, expected_rates)
+
